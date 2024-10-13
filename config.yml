@@ -1,0 +1,4 @@
+users:
+  - email: 'user@test.com'
+    password: 'test_pass'
+meeting_url: 'test.site'
