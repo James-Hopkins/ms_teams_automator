@@ -1,4 +1,6 @@
 users:
   - email: 'user@test.com'
     password: 'test_pass'
+    wait_before_joining: 10
+    wait_before_leaving: 10
 meeting_url: 'test.site'

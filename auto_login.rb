@@ -6,7 +6,14 @@ require 'yaml'
 config_data = YAML.load_file('config.yml')
 
 config = {
-    users: config_data['users'].map { |user| { email: user['email'], password: user['password'] } },
+    users: config_data['users'].map do |user|
+        {
+            email: user['email'],
+            password: user['password'],
+            wait_before_joining: user['wait_before_joining'],
+            wait_before_leaving: user['wait_before_leaving']
+        }
+    end,
     meeting_url: config_data['meeting_url']
 }
 
@@ -44,17 +51,17 @@ def login_join_and_leave_meeting(user, meeting_url, driver)
     wait.until { driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3') }
     driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3').click
 
-    sleep 1
+    sleep user[:wait_before_joining]
 
     wait.until { driver.find_element(xpath: '//*[@id="prejoin-join-button"]') }
     driver.find_element(xpath: '//*[@id="prejoin-join-button"]').click
 
-    sleep 15 # loading the ms teams web app takes a while
+    sleep user[:wait_before_leaving]
 
     wait.until { driver.find_element(xpath: '//*[@id="app"]/div/div/div/div[4]/div[1]/div/div/div/div/div[3]') }
     driver.find_element(xpath: '//*[@id="app"]/div/div/div/div[4]/div[1]/div/div/div/div/div[3]').click
 
-    sleep 30
+    sleep 5
 
     driver.quit # Close the browser session when done
 end
