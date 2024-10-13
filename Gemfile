@@ -2,6 +2,4 @@
 
 source 'https://rubygems.org'
 
-gem 'capybara'
-gem 'glimmer-dsl-libui'
 gem 'selenium-webdriver'
