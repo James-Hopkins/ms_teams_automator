@@ -1,8 +1,14 @@
 # frozen_string_literal: true
 
 require 'selenium-webdriver'
+require 'yaml'
 
+config_data = YAML.load_file('config.yml')
 
+config = {
+    users: config_data['users'].map { |user| { email: user['email'], password: user['password'] } },
+    meeting_url: config_data['meeting_url']
+}
 
 options = Selenium::WebDriver::Chrome::Options.new
 options.add_argument('--use-fake-device-for-media-stream')
