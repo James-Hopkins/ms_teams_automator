@@ -27,6 +27,8 @@ end
 
 def login_join_and_leave_meeting(user, meeting_url, driver)
     driver.navigate.to 'https://account.microsoft.com/account/manage-my-account'
+    driver.save_screenshot('screenshot.png')
+    puts "Started for #{user[:email]}"
 
     driver.find_element(:id, 'id__5').click
     wait = Selenium::WebDriver::Wait.new(timeout: 10) # seconds
@@ -51,6 +53,7 @@ def login_join_and_leave_meeting(user, meeting_url, driver)
     wait.until { driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3') }
     driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3').click
 
+    puts "Waiting to join for #{user[:email]}"
     sleep user[:wait_before_joining]
 
     wait.until { driver.find_element(xpath: '//*[@id="prejoin-join-button"]') }
@@ -61,6 +64,7 @@ def login_join_and_leave_meeting(user, meeting_url, driver)
     wait.until { driver.find_element(xpath: '//*[@id="app"]/div/div/div/div[4]/div[1]/div/div/div/div/div[3]') }
     driver.find_element(xpath: '//*[@id="app"]/div/div/div/div[4]/div[1]/div/div/div/div/div[3]').click
 
+    puts "Meeting has been left for #{user[:email]}"
     sleep 5
 
     driver.quit # Close the browser session when done
