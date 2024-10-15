@@ -7,4 +7,4 @@ Install bundler if not already installed.
 run bundle install
 run bundle exec ruby auto_login_join_and_leave_meeting.rb
 
-To contribute checkout the contribution guide.
+To contribute checkout the contribution guide: [CONTRIBUTING](./CONTRIBUTING.md).
