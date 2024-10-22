@@ -28,12 +28,9 @@ end
 
 Celluloid.boot
 
-meeting_sessions = config[:users].map do |user|
+meeting_futures = config[:users].map do |user|
     meeting_session = MeetingSession.new(user, config[:meeting_url], build_driver)
-    meeting_session.async.login_join_and_leave_meeting
-    meeting_session
+    meeting_session.future.login_join_and_leave_meeting
 end
 
-sleep 120
-
-meeting_sessions.each(&:terminate)
+meeting_futures.each(&:value)

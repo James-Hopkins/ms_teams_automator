@@ -5,3 +5,6 @@ Style/Documentation:
 
 Layout/IndentationWidth:
   Width: 4
+
+Style/RescueStandardError:
+  Enabled: false

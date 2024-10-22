@@ -10,6 +10,7 @@ class MeetingSession
         @meeting_url = meeting_url
         @driver = driver
         @wait_time = Selenium::WebDriver::Wait.new(timeout: 10)
+        @max_retries = 5
     end
 
     def login_join_and_leave_meeting
@@ -18,9 +19,14 @@ class MeetingSession
         login
         join
         leave
+
+        'completed'
+    rescue
+        'completed'
     end
 
     def login
+        @driver.find_element(:id, 'id__5').click
         enter_user_name
         enter_password
         reject_stay_logged_in
@@ -29,47 +35,62 @@ class MeetingSession
     end
 
     def enter_user_name
-        sleep 1 # these are added because the elements are not yet enteraable so the built in @wait_time fails
+        retries = 0
 
-        @driver.find_element(:id, 'id__5').click
-        @wait_time.until { @driver.find_element(name: 'loginfmt') }
-        @driver.find_element(:name, 'loginfmt').send_keys(@user[:email])
-        @driver.find_element(:id, 'idSIButton9').click
-
-        sleep 1
+        begin
+            @wait_time.until { @driver.find_element(name: 'loginfmt') }
+            @driver.find_element(:name, 'loginfmt').send_keys(@user[:email])
+            @driver.find_element(:id, 'idSIButton9').click
+        rescue
+            retry if (retries += 1) < @max_retries
+        end
     end
 
     def enter_password
-        sleep 1
+        retries = 0
 
-        @wait_time.until { @driver.find_element(id: 'i0118', name: 'passwd') }
-        @driver.find_element(id: 'i0118', name: 'passwd').send_keys(@user[:password])
-        @driver.find_element(:id, 'idSIButton9').click
-
-        sleep 1
+        begin
+            @wait_time.until { @driver.find_element(id: 'i0118', name: 'passwd') }
+            @driver.find_element(id: 'i0118', name: 'passwd').send_keys(@user[:password])
+            @driver.find_element(:id, 'idSIButton9').click
+        rescue
+            retry if (retries += 1) < @max_retries
+        end
     end
 
     def reject_stay_logged_in
-        sleep 1
+        retries = 0
 
-        @wait_time.until { @driver.find_element(id: 'declineButton') }
-        @driver.find_element(id: 'declineButton').click
-
-        sleep 1
+        begin
+            @wait_time.until { @driver.find_element(id: 'declineButton') }
+            @driver.find_element(id: 'declineButton').click
+        rescue
+            retry if (retries += 1) < @max_retries
+        end
     end
 
     def join
         @driver.navigate.to @meeting_url
-        @wait_time.until do
-            @driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3')
-        end
-        @driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3').click
+        join_from_browser
 
         puts "Waiting to join for #{@user[:email]}"
         sleep @user[:wait_before_joining]
 
         @wait_time.until { @driver.find_element(id: 'prejoin-join-button') }
         @driver.find_element(id: 'prejoin-join-button').click
+    end
+
+    def join_from_browser
+        retries = 0
+
+        begin
+            @wait_time.until do
+                @driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3')
+            end
+            @driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3').click
+        rescue
+            retry if (retries += 1) < @max_retries
+        end
     end
 
     def leave
@@ -81,8 +102,6 @@ class MeetingSession
         @driver.find_element(xpath: '//*[@id="app"]/div/div/div/div[4]/div[1]/div/div/div/div/div[3]').click
 
         puts "Meeting has been left for #{@user[:email]}"
-        sleep 5
-
         @driver.quit # Close the browser session when done
     end
 end
