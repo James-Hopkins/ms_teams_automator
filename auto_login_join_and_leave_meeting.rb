@@ -2,6 +2,7 @@
 
 require 'selenium-webdriver'
 require 'yaml'
+require_relative 'meeting_session'
 
 config_data = YAML.load_file('config.yml')
 
@@ -25,57 +26,14 @@ def build_driver
     Selenium::WebDriver.for :chrome, options: options
 end
 
-def login_join_and_leave_meeting(user, meeting_url, driver)
-    driver.navigate.to 'https://account.microsoft.com/account/manage-my-account'
-    driver.save_screenshot('screenshot.png')
-    puts "Started for #{user[:email]}"
+Celluloid.boot
 
-    driver.find_element(:id, 'id__5').click
-    wait = Selenium::WebDriver::Wait.new(timeout: 10) # seconds
-    wait.until { driver.find_element(name: 'loginfmt') }
-    driver.find_element(:name, 'loginfmt').send_keys(user[:email])
-    driver.find_element(:id, 'idSIButton9').click
-
-    sleep 1 # these are added because the elements are not yet enteraable so the built in wait fails
-
-    wait.until { driver.find_element(id: 'i0118', name: 'passwd') }
-    driver.find_element(id: 'i0118', name: 'passwd').send_keys(user[:password])
-
-    sleep 1
-
-    driver.find_element(:id, 'idSIButton9').click
-    wait.until { driver.find_element(id: 'declineButton') }
-    driver.find_element(id: 'declineButton').click
-
-    sleep 1
-
-    driver.navigate.to meeting_url
-    wait.until { driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3') }
-    driver.find_element(xpath: '//*[@id="container"]/div/div/div[1]/div[4]/div/button[1]/div/h3').click
-
-    puts "Waiting to join for #{user[:email]}"
-    sleep user[:wait_before_joining]
-
-    wait.until { driver.find_element(xpath: '//*[@id="prejoin-join-button"]') }
-    driver.find_element(xpath: '//*[@id="prejoin-join-button"]').click
-
-    sleep user[:wait_before_leaving]
-
-    wait.until { driver.find_element(xpath: '//*[@id="app"]/div/div/div/div[4]/div[1]/div/div/div/div/div[3]') }
-    driver.find_element(xpath: '//*[@id="app"]/div/div/div/div[4]/div[1]/div/div/div/div/div[3]').click
-
-    puts "Meeting has been left for #{user[:email]}"
-    sleep 5
-
-    driver.quit # Close the browser session when done
+meeting_sessions = config[:users].map do |user|
+    meeting_session = MeetingSession.new(user, config[:meeting_url], build_driver)
+    meeting_session.async.login_join_and_leave_meeting
+    meeting_session
 end
 
-# Use threads to handle multiple users concurrently
-threads = config[:users].map do |user|
-    Thread.new do
-        login_join_and_leave_meeting(user, config[:meeting_url], build_driver)
-    end
-end
+sleep 120
 
-# Wait for all threads to complete
-threads.each(&:join)
+meeting_sessions.each(&:terminate)
